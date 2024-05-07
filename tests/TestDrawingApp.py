@@ -38,5 +38,34 @@ class TestDrawingApp(unittest.TestCase):
         self.app.image.save.assert_called_once_with("test.jpg.png")
         mock_showinfo.assert_called_once()
 
+    def test_paint(self):
+        # Проверяем, что при вызове paint последние координаты корректно обновляются
+        event = MagicMock(x=100, y=200)
+        self.app.last_x, self.app.last_y = 50, 60
+        self.app.paint(event)
+        self.assertEqual(self.app.last_x, 100)
+        self.assertEqual(self.app.last_y, 200)
+
+    def test_reset(self):
+        # Проверяем, что при вызове reset последние координаты сбрасываются
+        self.app.last_x, self.app.last_y = 50, 60
+        self.app.reset(None)
+        self.assertIsNone(self.app.last_x)
+        self.assertIsNone(self.app.last_y)
+
+    def test_use_eraser(self):
+        # Проверяем, что при вызове use_eraser цвет кисти становится белым
+        self.app.pen_color = 'black'
+        self.app.use_eraser()
+        self.assertEqual(self.app.pen_color, 'white')
+
+    def test_use_brush(self):
+        # Проверяем, что при вызове use_brush цвет кисти возвращается к предыдущему цвету
+        self.app.pen_color = 'black'
+        self.app.last_color = 'red'
+        self.app.use_brush()
+        self.assertEqual(self.app.pen_color, 'red')
+        self.assertEqual(self.app.last_color, 'red')
+
 if __name__ == '__main__':
     unittest.main()
