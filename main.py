@@ -42,23 +42,25 @@ class DrawingApp:
         brush_size_label = tk.Label(control_frame, text="Размер кисти:")
         brush_size_label.pack(side=tk.LEFT, padx=(10, 2))
 
-        # Создание отдельного фрейма для ползунка и выпадающего списка
         brush_size_frame = tk.Frame(control_frame)
         brush_size_frame.pack(side=tk.LEFT)
 
-        # Использование tk.Scale для выбора размера кисти
-        self.brush_size_scale = tk.Scale(brush_size_frame, from_=1, to=10, orient=tk.HORIZONTAL,
-                                         variable=self.brush_size, label="", length=100,
+        sizes = [1, 3, 5, 10]
+        self.create_brush_size_menu(brush_size_frame, sizes)
+
+    def create_brush_size_menu(self, parent, sizes):
+        size_menu = tk.OptionMenu(parent, self.brush_size, *sizes, command=self.update_brush_size)
+        size_menu.pack(side=tk.LEFT)
+
+        tk.Label(parent, text="   ").pack(side=tk.LEFT)
+
+        self.brush_size_scale = tk.Scale(parent, from_=1, to=10, orient=tk.HORIZONTAL,
+                                         variable=self.brush_size, length=100,
                                          command=self.update_brush_size)
         self.brush_size_scale.pack(side=tk.LEFT)
 
-        # Делаем визуальный отступ между ползунком и списком
-        tk.Label(brush_size_frame, text="   ").pack(side=tk.LEFT)
-
-        # Использование tk.OptionMenu для выбора размера кисти из предопределенных вариантов
-        sizes = [1, 3, 5, 10]
-        size_menu = tk.OptionMenu(brush_size_frame, self.brush_size, *sizes, command=self.update_brush_size)
-        size_menu.pack(side=tk.LEFT)
+    def update_brush_size(self, value):
+        self.brush_size.set(value)
 
     def paint(self, event):
         if self.last_x and self.last_y:
@@ -88,10 +90,7 @@ class DrawingApp:
             if not file_path.endswith('.png'):
                 file_path += '.png'
             self.image.save(file_path)
-            messagebox.showinfo("Информация", "Изображение успешно сохранено!")
-
-    def update_brush_size(self, value):
-        self.brush_size.set(value)
+            messagebox.showinfo("Информация", f"Изображение успешно сохранено {file_path}")
 
 
 def main():
