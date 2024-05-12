@@ -32,6 +32,9 @@ class DrawingApp:
 
         self.canvas.bind('<B1-Motion>', self.paint)
         self.canvas.bind('<ButtonRelease-1>', self.reset)
+        self.canvas.bind('<Button-2>',
+                         self.pick_color)  # На MacOS <Button-3> (правая кнопка мыши/трекпада) не срабатывает,
+        # заменил на <Button-2> - особенность MacOS
 
     def setup_ui(self):
         """
@@ -155,6 +158,21 @@ class DrawingApp:
                 file_path += '.png'
             self.image.save(file_path)
             messagebox.showinfo("Информация", f"Изображение успешно сохранено {file_path}")
+
+    def rgb_to_hex(self, rgb):
+        """Преобразует кортеж RGB в шестнадцатеричный код цвета."""
+        return '#{:02x}{:02x}{:02x}'.format(*rgb)
+
+    def pick_color(self, event):
+        """
+        Извлекает цвет пикселя в месте клика правой кнопкой мыши и устанавливает его в качестве текущего цвета кисти.
+        Параметры:
+            event: Событие мыши.
+        """
+        if 0 <= event.x < self.image.width and 0 <= event.y < self.image.height:
+            pixel_color = self.image.getpixel((event.x, event.y))
+            self.pen_color = self.rgb_to_hex(pixel_color)  # Преобразование в шестнадцатеричный цвет
+            self.last_color = self.pen_color  # Обновляем последний выбранный цвет
 
 
 def main():
