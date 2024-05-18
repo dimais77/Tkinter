@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, messagebox
 from PIL import Image, ImageDraw
 
-
 class DrawingApp:
     def __init__(self, root):
         """
@@ -32,9 +31,11 @@ class DrawingApp:
 
         self.canvas.bind('<B1-Motion>', self.paint)
         self.canvas.bind('<ButtonRelease-1>', self.reset)
-        self.canvas.bind('<Button-2>',
-                         self.pick_color)  # На MacOS <Button-3> (правая кнопка мыши/трекпада) не срабатывает,
-        # заменил на <Button-2> - особенность MacOS
+        self.canvas.bind('<Button-2>', self.pick_color)  # На MacOS <Button-3> (правая кнопка мыши/трекпада) не срабатывает, заменил на <Button-2> - особенность MacOS
+
+        # Добавление горячих клавиш
+        self.root.bind('<Control-s>', self.save_image)
+        self.root.bind('<Control-c>', self.choose_color)
 
     def setup_ui(self):
         """
@@ -125,7 +126,7 @@ class DrawingApp:
         self.image = Image.new("RGB", (600, 400), "white")
         self.draw = ImageDraw.Draw(self.image)
 
-    def choose_color(self):
+    def choose_color(self, event=None):
         """
         Позволяет выбрать цвет кисти.
         """
@@ -148,7 +149,7 @@ class DrawingApp:
         self.pen_color = self.last_color
         self.last_color = self.pen_color
 
-    def save_image(self):
+    def save_image(self, event=None):
         """
         Сохраняет изображение в формате PNG.
         """
@@ -174,12 +175,10 @@ class DrawingApp:
             self.pen_color = self.rgb_to_hex(pixel_color)  # Преобразование в шестнадцатеричный цвет
             self.last_color = self.pen_color  # Обновляем последний выбранный цвет
 
-
 def main():
     root = tk.Tk()
     DrawingApp(root)
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()
