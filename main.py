@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, messagebox
 from PIL import Image, ImageDraw
 
+
 class DrawingApp:
     def __init__(self, root):
         """
@@ -23,17 +24,18 @@ class DrawingApp:
         self.brush_size = tk.IntVar()
         self.brush_size.set(1)
 
-        self.setup_ui()
-
         self.last_x, self.last_y = None, None
         self.pen_color = 'black'
         self.last_color = 'black'
 
+        self.setup_ui()
+
         self.canvas.bind('<B1-Motion>', self.paint)
         self.canvas.bind('<ButtonRelease-1>', self.reset)
-        self.canvas.bind('<Button-2>', self.pick_color)  # На MacOS <Button-3> (правая кнопка мыши/трекпада) не срабатывает, заменил на <Button-2> - особенность MacOS
+        self.canvas.bind('<Button-2>',
+                         self.pick_color)  # На MacOS <Button-3> (правая кнопка мыши/трекпада) не срабатывает,
+        # заменил на <Button-2> - особенность MacOS
 
-        # Добавление горячих клавиш
         self.root.bind('<Control-s>', self.save_image)
         self.root.bind('<Control-c>', self.choose_color)
 
@@ -47,8 +49,16 @@ class DrawingApp:
         clear_button = tk.Button(control_frame, text="Очистить", command=self.clear_canvas)
         clear_button.pack(side=tk.LEFT)
 
-        color_button = tk.Button(control_frame, text="Выбрать цвет", command=self.choose_color)
+        # Фрейм для кнопки выбора цвета и предварительного просмотра:
+        color_frame = tk.Frame(control_frame)
+        color_frame.pack(side=tk.LEFT)
+
+        color_button = tk.Button(color_frame, text="Выбрать цвет", command=self.choose_color)
         color_button.pack(side=tk.LEFT)
+
+        # Виджет для предварительного просмотра цвета:
+        self.color_preview = tk.Label(color_frame, text=" ", bg=self.pen_color, width=2, height=1)
+        self.color_preview.pack(side=tk.LEFT, padx=(0, 10))
 
         brush_button = tk.Button(control_frame, text="Кисть", command=self.use_brush)
         brush_button.pack(side=tk.LEFT)
@@ -60,7 +70,7 @@ class DrawingApp:
         save_button.pack(side=tk.LEFT)
 
         brush_size_label = tk.Label(control_frame, text="Размер кисти:")
-        brush_size_label.pack(side=tk.LEFT, padx=(10, 2))
+        brush_size_label.pack(side=tk.LEFT, padx=(5, 2))
 
         brush_size_frame = tk.Frame(control_frame)
         brush_size_frame.pack(side=tk.LEFT)
@@ -134,13 +144,15 @@ class DrawingApp:
         if color[1]:
             self.pen_color = color[1]
             self.last_color = self.pen_color
+            self.update_color_preview()  # Обновление цвета предварительного просмотра
 
     def use_eraser(self):
         """
-        Переключает режим на ластика.
+        Переключает режим на ластик.
         """
         self.last_color = self.pen_color
         self.pen_color = 'white'
+        self.update_color_preview()  # Обновление цвета предварительного просмотра
 
     def use_brush(self):
         """
@@ -148,6 +160,7 @@ class DrawingApp:
         """
         self.pen_color = self.last_color
         self.last_color = self.pen_color
+        self.update_color_preview()  # Обновление цвета предварительного просмотра
 
     def save_image(self, event=None):
         """
@@ -173,12 +186,21 @@ class DrawingApp:
         if 0 <= event.x < self.image.width and 0 <= event.y < self.image.height:
             pixel_color = self.image.getpixel((event.x, event.y))
             self.pen_color = self.rgb_to_hex(pixel_color)  # Преобразование в шестнадцатеричный цвет
-            self.last_color = self.pen_color  # Обновляем последний выбранный цвет
+            self.last_color = self.pen_color  # Обновление последнего выбранного цвета
+            self.update_color_preview()  # Обновление цвета предварительного просмотра
+
+    def update_color_preview(self):
+        """
+        Обновляет цвет предварительного просмотра.
+        """
+        self.color_preview.config(bg=self.pen_color)
+
 
 def main():
     root = tk.Tk()
     DrawingApp(root)
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
