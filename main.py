@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import colorchooser, filedialog, messagebox
+from tkinter import colorchooser, filedialog, messagebox, simpledialog
 from PIL import Image, ImageDraw
 
 
@@ -24,6 +24,9 @@ class DrawingApp:
         self.brush_size = tk.IntVar()
         self.brush_size.set(1)
 
+        self.style_var = tk.StringVar()
+        self.style_var.set('round')
+
         self.last_x, self.last_y = None, None
         self.pen_color = 'black'
         self.last_color = 'black'
@@ -32,9 +35,7 @@ class DrawingApp:
 
         self.canvas.bind('<B1-Motion>', self.paint)
         self.canvas.bind('<ButtonRelease-1>', self.reset)
-        self.canvas.bind('<Button-2>',
-                         self.pick_color)  # На MacOS <Button-3> (правая кнопка мыши/трекпада) не срабатывает,
-        # заменил на <Button-2> - особенность MacOS
+        self.canvas.bind('<Button-2>', self.pick_color)
 
         self.root.bind('<Control-s>', self.save_image)
         self.root.bind('<Control-c>', self.choose_color)
@@ -49,25 +50,29 @@ class DrawingApp:
         clear_button = tk.Button(control_frame, text="Очистить", command=self.clear_canvas)
         clear_button.pack(side=tk.LEFT)
 
-        # Фрейм для кнопки выбора цвета и предварительного просмотра:
-        color_frame = tk.Frame(control_frame)
-        color_frame.pack(side=tk.LEFT)
+        resize_button = tk.Button(control_frame, text="Изменить размер холста", command=self.resize_canvas)
+        resize_button.pack(side=tk.LEFT)
 
-        color_button = tk.Button(color_frame, text="Выбрать цвет", command=self.choose_color)
+        color_button = tk.Button(control_frame, text="Выбрать цвет", command=self.choose_color)
         color_button.pack(side=tk.LEFT)
 
-        # Виджет для предварительного просмотра цвета:
-        self.color_preview = tk.Label(color_frame, text=" ", bg=self.pen_color, width=2, height=1)
+        self.color_preview = tk.Label(control_frame, text=" ", bg=self.pen_color, width=2, height=1)
         self.color_preview.pack(side=tk.LEFT, padx=(0, 10))
-
-        brush_button = tk.Button(control_frame, text="Кисть", command=self.use_brush)
-        brush_button.pack(side=tk.LEFT)
 
         eraser_button = tk.Button(control_frame, text="Ластик", command=self.use_eraser)
         eraser_button.pack(side=tk.LEFT)
 
         save_button = tk.Button(control_frame, text="Сохранить", command=self.save_image)
         save_button.pack(side=tk.LEFT)
+
+        brush_button = tk.Button(control_frame, text="Кисть", command=self.use_brush)
+        brush_button.pack(side=tk.LEFT)
+
+        style_label = tk.Label(control_frame, text="Стиль кисти:")
+        style_label.pack(side=tk.LEFT, padx=(5, 2))
+
+        style_menu = tk.OptionMenu(control_frame, self.style_var, 'round', 'butt', 'projecting')
+        style_menu.pack(side=tk.LEFT)
 
         brush_size_label = tk.Label(control_frame, text="Размер кисти:")
         brush_size_label.pack(side=tk.LEFT, padx=(5, 2))
@@ -115,7 +120,7 @@ class DrawingApp:
         if self.last_x and self.last_y:
             self.canvas.create_line(self.last_x, self.last_y, event.x, event.y,
                                     width=self.brush_size.get(), fill=self.pen_color,
-                                    capstyle=tk.ROUND, smooth=tk.TRUE)
+                                    capstyle=self.style_var.get(), smooth=tk.TRUE)
             self.draw.line([self.last_x, self.last_y, event.x, event.y], fill=self.pen_color,
                            width=self.brush_size.get())
 
@@ -133,7 +138,20 @@ class DrawingApp:
         Очищает холст.
         """
         self.canvas.delete("all")
-        self.image = Image.new("RGB", (600, 400), "white")
+        self.image = Image.new("RGB", (self.canvas.winfo_width(), self.canvas.winfo_height()), "white")
+        self.draw = ImageDraw.Draw(self.image)
+
+    def resize_canvas(self):
+        """
+        Изменяет размер холста.
+        """
+        new_width = simpledialog.askinteger("Размер холста", "Введите новую ширину (min=100, max=1800):", minvalue=100,
+                                            maxvalue=1800)
+        new_height = simpledialog.askinteger("Размер холста", "Введите новую высоту (min=100, max=900:", minvalue=90,
+                                             maxvalue=900)
+
+        self.canvas.config(width=new_width, height=new_height)
+        self.image = Image.new("RGB", (new_width, new_height), "white")
         self.draw = ImageDraw.Draw(self.image)
 
     def choose_color(self, event=None):
@@ -144,7 +162,7 @@ class DrawingApp:
         if color[1]:
             self.pen_color = color[1]
             self.last_color = self.pen_color
-            self.update_color_preview()  # Обновление цвета предварительного просмотра
+            self.update_color_preview()
 
     def use_eraser(self):
         """
@@ -152,7 +170,7 @@ class DrawingApp:
         """
         self.last_color = self.pen_color
         self.pen_color = 'white'
-        self.update_color_preview()  # Обновление цвета предварительного просмотра
+        self.update_color_preview()
 
     def use_brush(self):
         """
@@ -160,7 +178,7 @@ class DrawingApp:
         """
         self.pen_color = self.last_color
         self.last_color = self.pen_color
-        self.update_color_preview()  # Обновление цвета предварительного просмотра
+        self.update_color_preview()
 
     def save_image(self, event=None):
         """
@@ -185,9 +203,9 @@ class DrawingApp:
         """
         if 0 <= event.x < self.image.width and 0 <= event.y < self.image.height:
             pixel_color = self.image.getpixel((event.x, event.y))
-            self.pen_color = self.rgb_to_hex(pixel_color)  # Преобразование в шестнадцатеричный цвет
-            self.last_color = self.pen_color  # Обновление последнего выбранного цвета
-            self.update_color_preview()  # Обновление цвета предварительного просмотра
+            self.pen_color = self.rgb_to_hex(pixel_color)
+            self.last_color = self.pen_color
+            self.update_color_preview()
 
     def update_color_preview(self):
         """
