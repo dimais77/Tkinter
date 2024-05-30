@@ -93,5 +93,6 @@ class TestDrawingApp(unittest.TestCase):
         self.assertEqual(self.app.last_color, '#ffffff')
         self.assertEqual(self.app.color_preview.cget('bg'), '#ffffff')
 
+
 if __name__ == '__main__':
     unittest.main()
